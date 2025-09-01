@@ -26,7 +26,7 @@ This repository contains our team’s project with CI/CD pipelines configured us
 git clone https://github.com/aolus2/cs484-project-ci-cd.git
 
 
-## Development Setup
+## Development Setup for group members.
 ```bash
 npm install
 npm run dev
