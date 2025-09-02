@@ -3,7 +3,7 @@
 ## Members
 - Anirudh Yallapragada (@ayall2)
 - Tommy (@....)
-- Thomas Webber (@...)
+- Thomas Webber (@twebb21)
 - Adetayo Timothy Olusegun (@olus2)
 
 ### Instructor
