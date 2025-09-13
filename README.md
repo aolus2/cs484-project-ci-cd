@@ -1,10 +1,10 @@
 # CS484 Team Project
 
 ## Members
-- Anirudh Yallapragada (@ayall2)
-- Tommy (@....)
-- Thomas Webber (@twebb21)
-- Adetayo Timothy Olusegun (@olus2)
+- Anirudh, Yallapragada (ayall2@uic.edu)
+- Tommy, Kang (dkang51@uic.edu)
+- Thomas, Webber (twebb21@uic.edu)
+- Adetayo Timothy Olusegun (@olus2@uic.edu)
 
 ### Instructor
 - Prof. Chris Kanich (@kaytwo)
