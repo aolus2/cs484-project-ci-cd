@@ -37,6 +37,10 @@ public class WebSecurityConfig {
                         .requestMatchers("api/auth/register").permitAll()
                         .requestMatchers(HttpMethod.GET, "/login").permitAll()
                         .requestMatchers(HttpMethod.GET, "api/posts/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/posts/**").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/api/posts/*/student-answer").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/posts/*/replies").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/posts/*/LLMReply").permitAll()
                         .anyRequest().authenticated()
                 )
                 // login config

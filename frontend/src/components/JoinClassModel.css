@@ -1,0 +1,292 @@
+/* Modal Overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+/* Modal Content */
+.modal-content {
+  background-color: white;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 900px;
+  max-height: 85vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+/* Close Button */
+.modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 32px;
+  color: #666;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  padding: 0;
+}
+
+.modal-close:hover {
+  color: #333;
+}
+
+/* Modal Header */
+.modal-header {
+  background-color: #d9e8f5;
+  padding: 40px 50px 30px 50px;
+  text-align: center;
+}
+
+.modal-header h1 {
+  font-size: 32px;
+  font-weight: 400;
+  color: #333;
+  margin: 0 0 8px 0;
+}
+
+.change-school-btn {
+  background: none;
+  border: none;
+  color: #1c5a99;
+  font-size: 14px;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.change-school-btn:hover {
+  text-decoration: underline;
+}
+
+/* Modal Body */
+.modal-body {
+  padding: 30px 50px 40px 50px;
+}
+
+/* Term Selector */
+.term-selector {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 30px;
+}
+
+.term-selector label {
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+}
+
+.term-dropdown {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  background-color: white;
+  cursor: pointer;
+  min-width: 150px;
+}
+
+.term-dropdown:focus {
+  outline: none;
+  border-color: #1c5a99;
+}
+
+/* Enrolled Classes */
+.enrolled-classes {
+  margin-bottom: 20px;
+}
+
+.enrolled-classes h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 20px 0;
+}
+
+/* Class Items */
+.enrolled-class {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.enrolled-class:last-of-type {
+  border-bottom: none;
+}
+
+.class-header {
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;
+  min-width: 70px;
+  padding-top: 2px;
+}
+
+.class-info {
+  flex: 1;
+}
+
+.class-info strong {
+  display: block;
+  font-size: 15px;
+  color: #333;
+  margin-bottom: 6px;
+}
+
+.class-meta {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.enrollment-status {
+  font-size: 13px;
+  color: #333;
+  font-weight: 500;
+}
+
+.enrollment-status::before {
+  content: '✓';
+  color: #4caf50;
+  margin-right: 6px;
+  font-weight: bold;
+}
+
+/* New Class Input */
+.new-class-input {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  align-items: center;
+}
+
+.input-wrapper {
+  flex: 1;
+  position: relative;
+}
+
+.class-input {
+  width: 100%;
+  padding: 10px 40px 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.class-input:focus {
+  outline: none;
+  border-color: #1c5a99;
+}
+
+.remove-class-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #999;
+  cursor: pointer;
+  padding: 4px 8px;
+  line-height: 1;
+}
+
+.remove-class-btn:hover {
+  color: #666;
+}
+
+/* Add Class Button */
+.add-class-btn {
+  background: none;
+  border: none;
+  color: #1c5a99;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 8px 0;
+  margin-top: 8px;
+  text-decoration: none;
+}
+
+.add-class-btn:hover {
+  text-decoration: underline;
+}
+
+/* Modal Footer */
+.modal-footer {
+  display: flex;
+  justify-content: center;
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.join-btn {
+  background-color: #5a9fd4;
+  color: white;
+  border: none;
+  padding: 12px 40px;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.join-btn:hover {
+  background-color: #4a8fc4;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .modal-content {
+    width: 95%;
+    max-height: 90vh;
+  }
+
+  .modal-header {
+    padding: 30px 20px 20px 20px;
+  }
+
+  .modal-header h1 {
+    font-size: 24px;
+  }
+
+  .modal-body {
+    padding: 20px;
+  }
+
+  .enrolled-class {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .class-header {
+    min-width: auto;
+  }
+
+  .new-class-input {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

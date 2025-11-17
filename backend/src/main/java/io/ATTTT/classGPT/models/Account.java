@@ -46,4 +46,8 @@ public class Account {
             inverseJoinColumns = {@JoinColumn(name = "authority_name", referencedColumnName = "name")})
     private Set<Authority> authorities = new HashSet<>();
 
+    @JsonIgnore
+    public boolean hasRole(String roleName) {
+        return authorities.stream().anyMatch(a -> a.getName().equals(roleName));
+    }
 }
