@@ -13,14 +13,13 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 public class Authority {
+
     @Id
-    @Column(length = 16)
-    private String name;
+    @Column(length = 32)
+    private String name; // e.g. "ROLE_USER", "ROLE_ADMIN"
 
     @Override
-    public String toString(){
-        return "Authority{" +
-                "name='" + name + "'" +
-                "}";
+    public String toString() {
+        return "Authority{name='" + name + "'}";
     }
 }

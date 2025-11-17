@@ -11,6 +11,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
+import static org.springframework.security.config.Customizer.withDefaults;
+
+import jakarta.servlet.http.HttpServletResponse;
+
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true)
@@ -21,42 +25,43 @@ public class WebSecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    private static final String[] WHITELIST = {
-            "/register",
-            "/h2-console/*",
-            "/"
-    };
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                // authorize requests
+                .cors(withDefaults())
+                .csrf(csrf -> csrf.disable())
+
+
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(WHITELIST).permitAll()
-                        .requestMatchers(HttpMethod.GET, "/posts/**").permitAll()
+                        .requestMatchers("api/auth/register").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/login").permitAll()
+                        .requestMatchers(HttpMethod.GET, "api/posts/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 // login config
                 .formLogin(form -> form
-                        .loginPage("/login")          // <- must match your controller/view
                         .loginProcessingUrl("/login")
                         .usernameParameter("email")
                         .passwordParameter("password")
-                        .defaultSuccessUrl("/", true)
-                        .failureUrl("/login?error")
+                        .successHandler((request, response, authentication) -> {
+                            response.setStatus(HttpServletResponse.SC_OK);
+                        })
+                        .failureHandler((request, response, exception) -> {
+                            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Authentication failed");
+                        })
                         .permitAll()
                 )
                 // logout config
                 .logout(logout -> logout
                         .logoutUrl("/logout")
+                        .logoutSuccessHandler((request, response, authentication) -> {
+                            response.setStatus(HttpServletResponse.SC_OK);
+                        })
                         .permitAll()
                 )
                 // basic auth (optional; for APIs, etc.)
                 .httpBasic(httpBasic -> {});
-
-        // h2-console + CSRF/frame options tweaks
-        http.csrf(csrf -> csrf.disable());
-        http.headers(headers -> headers.frameOptions(frame -> frame.disable()));
 
         return http.build();
     }

@@ -24,15 +24,33 @@ public class AccountService {
     public Account save(Account account) {
 
         if (account.getId() == null) {
-            if (account.getAuthorities().isEmpty()) {
+            if (account.getAuthorities().isEmpty()) { //For new Accounts
                 Set<Authority> authorities = new HashSet<>();
                 authorityRepository.findById("ROLE_USER").ifPresent(authorities::add);
                 account.setAuthorities(authorities);
             }
+
+            if (account.getPassword() == null) {
+                throw new IllegalArgumentException("Password cannot be null");
+            }
+            account.setPassword(passwordEncoder.encode(account.getPassword()));
+
             account.setCreatedAt(LocalDateTime.now());
+
+        }
+        else{
+            Account existing = accountRepository.findById(account.getId())
+                    .orElseThrow();
+            if (account.getPassword() == null) {
+                account.setPassword(existing.getPassword());
+            }
+            else if(!account.getPassword().equals(existing.getPassword())){
+                account.setPassword(passwordEncoder.encode(account.getPassword()));
+
+            }
+
         }
         account.setUpdatedAt(LocalDateTime.now());
-        account.setPassword(passwordEncoder.encode(account.getPassword()));
         return accountRepository.save(account);
     }
 

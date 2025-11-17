@@ -3,133 +3,86 @@ package io.ATTTT.classGPT.controllers;
 import io.ATTTT.classGPT.models.Account;
 import io.ATTTT.classGPT.models.Post;
 import io.ATTTT.classGPT.services.AccountService;
-import io.ATTTT.classGPT.services.FileService;
 import io.ATTTT.classGPT.services.PostService;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.security.Principal;
+import java.util.List;
 import java.util.Optional;
 
-@Controller
+@RestController
+@RequestMapping("/api/posts")
+@RequiredArgsConstructor
 public class PostController {
 
     private static final Logger log = LoggerFactory.getLogger(PostController.class);
 
-    @Autowired
-    private PostService postService;
+    private final PostService postService;
+    private final AccountService accountService;
 
-    @Autowired
-    private AccountService accountService;
 
-    @Autowired
-    private FileService fileService;
-
-    @GetMapping("/posts/{id}")
-    public String getPost(@PathVariable Long id, Model model){
-        Optional<Post> optionalPost = postService.getById(id);
-
-        if (optionalPost.isPresent()) {
-            Post post = optionalPost.get();
-            model.addAttribute("post", post);
-            return "post";
-        } else {
-            return "404";
-        }
+    @GetMapping
+    public List<Post> getAllPosts() {
+        return postService.getAll();
     }
 
-    @PostMapping("/posts/{id}")
-    @PreAuthorize("isAuthenticated()")
-    public String updatePost(@PathVariable Long id,
-                             @ModelAttribute Post post,
-                             @RequestParam(value = "file", required = false) MultipartFile file) {
 
-        Optional<Post> optionalPost = postService.getById(id);
-        if (optionalPost.isPresent()) {
-            Post existingPost = optionalPost.get();
-
-            existingPost.setTitle(post.getTitle());
-            existingPost.setBody(post.getBody());
-
-            if (file != null && !file.isEmpty()) {
-                try {
-                    fileService.save(file);
-                    existingPost.setImageFilePath(file.getOriginalFilename());
-                } catch (Exception e) {
-                    log.error("Error processing file: {}", file.getOriginalFilename(), e);
-                }
-            }
-
-            postService.save(existingPost);
-        }
-
-        return "redirect:/posts/" + id;
+    @GetMapping("/{id}")
+    public ResponseEntity<Post> getPost(@PathVariable Long id){
+        return postService.getById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
-    @GetMapping("/posts/new")
+    @PostMapping
     @PreAuthorize("isAuthenticated()")
-    public String createNewPost(Model model) {
-        Post post = new Post();
-        model.addAttribute("post", post);
-        return "post_new";
-    }
-
-    @PostMapping("/posts/new")
-    @PreAuthorize("isAuthenticated()")
-    public String createNewPost(@ModelAttribute Post post,
-                                @RequestParam(value = "file", required = false) MultipartFile file,
-                                Principal principal) {
-
-        String authUsername = principal.getName();
-
-        Account account = accountService.findByEmail(authUsername)
+    public ResponseEntity<Post> createPost(@RequestBody Post incoming,
+                                           Principal principal) {
+        String email = principal.getName();
+        Account account = accountService.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("Account not found"));
 
-        if (file != null && !file.isEmpty()) {
-            try {
-                fileService.save(file);
-                post.setImageFilePath(file.getOriginalFilename());
-            } catch (Exception e) {
-                log.error("Error processing file: {}", file.getOriginalFilename(), e);
-            }
-        }
-
+        Post post = new Post();
+        post.setTitle(incoming.getTitle());
+        post.setBody(incoming.getBody());
         post.setAccount(account);
-        postService.save(post);
-        return "redirect:/";
+
+        Post saved = postService.save(post);
+        return ResponseEntity.ok(saved);
     }
 
-    @GetMapping("/posts/{id}/edit")
+
+    @PutMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
-    public String getPostForEdit(@PathVariable Long id, Model model) {
+    public ResponseEntity<Post> updatePost(@PathVariable Long id,
+                                           @RequestBody Post incoming) {
 
-        Optional<Post> optionalPost = postService.getById(id);
-        if (optionalPost.isPresent()) {
-            Post post = optionalPost.get();
-            model.addAttribute("post", post);
-            return "post_edit";
-        } else {
-            return "404";
-        }
+        return postService.getById(id)
+                .map(existing -> {
+                    existing.setTitle(incoming.getTitle());
+                    existing.setBody(incoming.getBody());
+                    Post saved = postService.save(existing);
+                    return ResponseEntity.ok(saved);
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 
-    @GetMapping("/posts/{id}/delete")
-    @PreAuthorize("hasRole('ADMIN')")
-    public String deletePost(@PathVariable Long id) {
 
-        Optional<Post> optionalPost = postService.getById(id);
-        if (optionalPost.isPresent()) {
-            Post post = optionalPost.get();
-            postService.delete(post);
-            return "redirect:/";
-        } else {
-            return "404";
-        }
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Object> deletePost(@PathVariable Long id) {
+        return postService.getById(id)
+                .map(post -> {
+                    postService.delete(post);
+                    return ResponseEntity.noContent().build();
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 }
