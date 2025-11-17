@@ -30,3 +30,10 @@ git clone https://github.com/aolus2/cs484-project-ci-cd.git
 ```bash
 npm install
 npm run dev
+
+## Setup
+1. Create a Google API key for Gemini.
+2. Set the env var:
+
+   ```bash
+   export GOOGLE_API_KEY="your_key_here"
