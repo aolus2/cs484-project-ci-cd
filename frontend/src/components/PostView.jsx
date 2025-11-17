@@ -87,9 +87,10 @@ const PostView = ({
       </div>
 
       {/* Post Content */}
-      <div className="post-content-body">
-        <p>{post.content}</p>
-      </div>
+      <div
+        className="post-body"
+        dangerouslySetInnerHTML={{ __html: post.content }}
+      />
 
       {/* Post Tags */}
       {post.tags && post.tags.length > 0 && (

@@ -53,9 +53,21 @@ public class PostController {
 //    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Post> createPost(@RequestBody Post incoming,
                                            Principal principal) {
-        String email = principal.getName();
-        Account account = accountService.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("Account not found"));
+//        String email = principal.getName();
+//        Account account = accountService.findByEmail(email)
+//                .orElseThrow(() -> new IllegalArgumentException("Account not found"));
+
+        Account account;
+
+        if (principal != null) { //Temp anonymous implementation (will be removed once log in is handled
+            String email = principal.getName();
+            account = accountService.findByEmail(email)
+                    .orElseThrow(() -> new IllegalArgumentException("Account not found"));
+        } else {
+            // fallback demo user
+            account = accountService.findByEmail("user.user@domain.com")
+                    .orElseThrow(() -> new IllegalArgumentException("Account not found"));
+        }
 
         Post post = new Post();
         post.setTitle(incoming.getTitle());

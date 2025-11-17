@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './StudentDashboard.css';
 import PostView from './PostView';
+import NewPostView from './NewPostView';
 import ResourcesPage from './ResourcesPage';
 import JoinClassModel from './JoinClassModel';
 import UserDropdown from './UserDropDown';
@@ -54,6 +55,7 @@ const normalizePosts = (apiPosts) =>
   const [selectedTab, setSelectedTab] = useState('qa');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPost, setSelectedPost] = useState(null);
+  const [createdPost, setCreatedPost] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState('all'); // for hw0, hw1, etc filters
   const [showCourseDropdown, setShowCourseDropdown] = useState(false);
   const [showJoinClassModel, setShowJoinClassModel] = useState(false);
@@ -135,6 +137,22 @@ const normalizePosts = (apiPosts) =>
     }
   };
 
+  const handleNewPostSubmit = async (title, body) => {
+    try {
+      const response = await axios.post(`/api/posts`, { title, body });
+
+      const newPost = normalizePosts([response.data])[0]; 
+
+      setPosts(prevPosts => [newPost, ...prevPosts]);
+
+      setSelectedPost(newPost);
+      setCreatedPost(false);
+    } catch (err) {
+      console.error(err);
+      setError('Error posting new question');
+    }
+  };
+
 
   // Sample statistics
   const stats = {
@@ -152,7 +170,7 @@ const normalizePosts = (apiPosts) =>
   };
 
   const handleNewPost = () => {
-    console.log('Creating new post');
+    setCreatedPost(true);
   };
 
   const handlePostClick = (postId) => {
@@ -424,6 +442,15 @@ const normalizePosts = (apiPosts) =>
         <main className="main-content">
           {selectedTab === 'resources' ? (
             <ResourcesPage />
+          ) : createdPost ? (
+            <NewPostView
+              onCancel={() => setCreatedPost(false)}
+              onPostCreated={async (post) => {
+                setCreatedPost(false);
+                setSelectedPost(post);
+              }}
+              onSubmit={handleNewPostSubmit}
+            />
           ) : selectedPost ? (
             <PostView
               post={selectedPost}
