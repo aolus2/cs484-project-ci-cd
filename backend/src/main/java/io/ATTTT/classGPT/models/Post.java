@@ -4,7 +4,7 @@ package io.ATTTT.classGPT.models;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import org.antlr.v4.runtime.misc.NotNull;
+
 
 import java.time.LocalDateTime;
 
@@ -30,7 +30,6 @@ public class Post{
     private LocalDateTime modifiedAt;
 
 
-    @NotNull
     @ManyToOne
     @JoinColumn(name = "account_id", referencedColumnName = "id", nullable = false)
     private Account account;
@@ -46,12 +45,15 @@ public class Post{
                 "}";
     }
 
-    public String getImageFilePath() {
-        return imageFilePath;
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        modifiedAt = LocalDateTime.now();
     }
 
-    public void setImageFilePath(String imageFilePath) {
-        this.imageFilePath = imageFilePath;
+    @PreUpdate
+    protected void onUpdate() {
+        modifiedAt = LocalDateTime.now();
     }
 
 

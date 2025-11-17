@@ -3,11 +3,10 @@ package io.ATTTT.classGPT.config;
 import io.ATTTT.classGPT.models.Account;
 import io.ATTTT.classGPT.models.Authority;
 import io.ATTTT.classGPT.models.Post;
-import io.ATTTT.classGPT.repositories.AccountRepository;
 import io.ATTTT.classGPT.repositories.AuthorityRepository;
 import io.ATTTT.classGPT.services.AccountService;
 import io.ATTTT.classGPT.services.PostService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
@@ -16,16 +15,12 @@ import java.util.List;
 import java.util.Set;
 
 @Component
+@RequiredArgsConstructor
 public class SeedData implements CommandLineRunner {
 
-    @Autowired
-    private PostService postService;
-
-    @Autowired
-    private AccountService accountService;
-
-    @Autowired
-    private AuthorityRepository authorityRepository;
+    private final PostService postService;
+    private final AccountService accountService;
+    private final AuthorityRepository authorityRepository;
 
     @Override
     public void run(String...args) throws Exception{
@@ -41,25 +36,26 @@ public class SeedData implements CommandLineRunner {
             admin.setName("ROLE_ADMIN");
             authorityRepository.save(admin);
 
-
             Account account1 = new Account();
             Account account2 = new Account();
 
             account1.setFirstName("user");
             account1.setLastName("user");
             account1.setEmail("user.user@domain.com");
+            account1.setPassword("password");
             Set<Authority> authorities1 = new HashSet<>();
             authorityRepository.findById("ROLE_USER").ifPresent(authorities1::add);
-            account1.setAuthorites(authorities1.toString());
-            account1.setPassword("password");
+            account1.setAuthorities(authorities1);
+
 
             account2.setFirstName("admin");
             account2.setLastName("admin");
             account2.setEmail("admin.admin@domain.com");
+            account2.setPassword("password");
             Set<Authority> authorities2 = new HashSet<>();
             authorityRepository.findById("ROLE_USER").ifPresent(authorities2::add);
-            account2.setAuthorites(authorities2.toString());
-            account2.setPassword("password");
+            authorityRepository.findById("ROLE_ADMIN").ifPresent(authorities2::add);
+            account2.setAuthorities(authorities2);
 
             accountService.save(account1);
             accountService.save(account2);
