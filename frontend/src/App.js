@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import StudentDashboard from './components/StudentDashboard';
 import LoginPage from './components/LoginPage';
 import './App.css';
+import { Routes, Route, Navigate } from 'react-router-dom';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -10,27 +11,33 @@ function App() {
 
   // Check if user is already logged in on mount
   useEffect(() => {
-    checkAuthStatus();
+    setIsLoading(false);
   }, []);
 
-  const checkAuthStatus = async () => {
-    try {
-      // Try to fetch posts to check if we're authenticated
-      const response = await fetch('http://localhost:8080/api/posts', {
-        credentials: 'include'
-      });
-      
-      if (response.ok) {
-        // User is authenticated
-        setIsAuthenticated(true);
-        // You might want to fetch user details here
+  useEffect(() => {
+    const checkAuthStatus = async () => {
+      try {
+        const res = await fetch(`http://localhost:8080/api/auth/me`, {
+          credentials: 'include',
+        });
+
+        if (res.ok) {
+          const account = await res.json();
+          setUser(account);
+          setIsAuthenticated(true);
+        } else {
+          setIsAuthenticated(false);
+        }
+      } catch (err) {
+        console.error('Not authenticated', err);
+        setIsAuthenticated(false);
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.log('Not authenticated');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    };
+
+    checkAuthStatus();
+  }, []);
 
   const handleLogin = async (userData) => {
     try {
@@ -38,12 +45,15 @@ function App() {
       formData.append('email', userData.email);
       formData.append('password', userData.password);
 
-      const response = await fetch('http://localhost:8080/login', {
+      const response = await fetch('http://localhost:8080/api/auth/login', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
+          'Content-Type': 'application/json',
         },
-        body: formData.toString(),
+        body: JSON.stringify({
+          email: userData.email,
+          password: userData.password,
+        }),
         credentials: 'include'
       });
 
@@ -63,19 +73,18 @@ function App() {
   const handleRegister = async (userData) => {
     try {
       const response = await fetch('http://localhost:8080/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          fullName: userData.fullName,
-          email: userData.email,
-          password: userData.password,
-          role: userData.role,
-          classCodes: userData.classCodes || []
-        }),
-        credentials: 'include'
-      });
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              fullName: userData.fullName,
+              email: userData.email,
+              password: userData.password,
+              role: userData.role,
+              classCodes: userData.classCodes || []
+            }),
+        });
 
       if (response.ok) {
         // After successful registration, log them in
@@ -118,13 +127,25 @@ function App() {
   }
 
   return (
-    <div className="App">
-      {isAuthenticated ? (
-        <StudentDashboard onLogout={handleLogout} userName={user?.name || user?.fullName || 'User'} />
-      ) : (
-        <LoginPage onLogin={handleLogin} onRegister={handleRegister} />
-      )}
-    </div>
+    <Routes>
+      <Route
+        path="/login"
+        element={
+          isAuthenticated
+            ? <Navigate to="/" replace />
+            : <LoginPage onLogin={handleLogin} onRegister={handleRegister} />
+        }
+      />
+
+      <Route
+        path="/"
+        element={
+          isAuthenticated
+            ? <StudentDashboard onLogout={handleLogout} userName={user?.firstName || 'User'} />
+            : <Navigate to="/login" replace />
+        }
+      />
+    </Routes>
   );
 }
 

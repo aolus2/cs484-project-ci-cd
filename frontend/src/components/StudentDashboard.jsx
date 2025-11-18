@@ -8,6 +8,8 @@ import JoinClassModel from './JoinClassModel';
 import UserDropdown from './UserDropDown';
 import AccountSettings from './AccountSettings';
 
+const API_BASE = 'http://localhost:8080';
+
 const StudentDashboard = ({ onLogout, userName }) => {
 
 
@@ -89,7 +91,7 @@ const normalizePosts = (apiPosts) =>
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const response = await axios.get('/api/posts');
+        const response = await axios.get(`${API_BASE}/api/posts`);
         const normalizedPosts = normalizePosts(response.data);
         setPosts(normalizedPosts);
       } catch (err) {
@@ -103,9 +105,9 @@ const normalizePosts = (apiPosts) =>
 
   const handleLLMReply = async (postId, text) => {
     try {
-      await axios.post(`/api/posts/${postId}/LLMReply`, { body: text });
+      await axios.post(`${API_BASE}/api/posts/${postId}/LLMReply`, { body: text }, { withCredentials: true });
 
-      const res = await axios.get('/api/posts');
+      const res = await axios.get(`${API_BASE}/api/posts`);
       const normalized = normalizePosts(res.data);
       setPosts(normalized);
 
@@ -121,9 +123,9 @@ const normalizePosts = (apiPosts) =>
 
   const handleFollowupSubmit = async (postId, text) => {
     try {
-      await axios.post(`/api/posts/${postId}/replies`, { body: text });
+      await axios.post(`${API_BASE}/api/posts/${postId}/replies`, { body: text }, { withCredentials: true });
 
-      const res = await axios.get('/api/posts');
+      const res = await axios.get(`${API_BASE}/api/posts`);
       const normalized = normalizePosts(res.data);
       setPosts(normalized);
 
@@ -139,7 +141,7 @@ const normalizePosts = (apiPosts) =>
 
   const handleNewPostSubmit = async (title, body) => {
     try {
-      const response = await axios.post(`/api/posts`, { title, body });
+      const response = await axios.post(`${API_BASE}/api/posts`, { title, body }, { withCredentials: true });
 
       const newPost = normalizePosts([response.data])[0]; 
 

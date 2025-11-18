@@ -50,24 +50,20 @@ public class PostController {
     }
 
     @PostMapping
-//    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Post> createPost(@RequestBody Post incoming,
                                            Principal principal) {
-//        String email = principal.getName();
-//        Account account = accountService.findByEmail(email)
-//                .orElseThrow(() -> new IllegalArgumentException("Account not found"));
 
-        Account account;
-
-        if (principal != null) { //Temp anonymous implementation (will be removed once log in is handled
-            String email = principal.getName();
-            account = accountService.findByEmail(email)
-                    .orElseThrow(() -> new IllegalArgumentException("Account not found"));
-        } else {
-            // fallback demo user
-            account = accountService.findByEmail("user.user@domain.com")
-                    .orElseThrow(() -> new IllegalArgumentException("Account not found"));
+        if (principal == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
         }
+
+        String email = principal.getName();
+        Account account = accountService.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.UNAUTHORIZED,
+                        "Account not found for authenticated user"
+                ));
 
         Post post = new Post();
         post.setTitle(incoming.getTitle());
@@ -80,9 +76,15 @@ public class PostController {
 
 
     @PutMapping("/{id}")
-//    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Post> updatePost(@PathVariable Long id,
-                                           @RequestBody Post incoming) {
+                                           @RequestBody Post incoming,
+                                           Principal principal) {
+
+        if (principal == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
+        }
+
 
         return postService.getById(id)
                 .map(existing -> {
@@ -96,7 +98,7 @@ public class PostController {
 
 
     @DeleteMapping("/{id}")
-//    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Object> deletePost(@PathVariable Long id) {
         return postService.getById(id)
                 .map(post -> {
@@ -108,27 +110,26 @@ public class PostController {
 
 
     @PostMapping("/{id}/replies")
-//    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Object> addReply(@PathVariable Long id,
                                            @RequestBody CreateFollowupRequest req,
                                            Principal principal) {
+        if (principal == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
+        }
+
         Post post = postService.getById(id)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        String email = principal.getName();
+        Account account = accountService.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("Account not found"));
 
         Replies reply = new Replies();
         reply.setBody(req.getBody());
+        reply.setAuthor(account);
+        reply.setFromInstructor(account.hasRole("ROLE_ADMIN"));
         reply.setPost(post);
-
-        if (principal != null) {
-            String email = principal.getName();
-            Account account = accountService.findByEmail(email)
-                    .orElseThrow(() -> new IllegalArgumentException("Account not found"));
-            reply.setAuthor(account);
-            reply.setFromInstructor(account.hasRole("ROLE_ADMIN"));
-        } else {
-            reply.setAuthor(null);
-            reply.setFromInstructor(false);
-        } //We're gonna have to change this once the log in page is figured out
 
         reply.setLLMGenerated(false);
         Replies saved = repliesRepository.save(reply);
@@ -136,29 +137,29 @@ public class PostController {
     }
 
     @PostMapping("/{id}/LLMReply")
-//    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Object> addLLMReply(@PathVariable Long id,
                                            Principal principal) {
+
+        if (principal == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
+        }
+
         Post post = postService.getById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        String email = principal.getName();
+        Account account = accountService.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("Account not found"));
 
 
         Replies reply = new Replies();
         reply.setBody(geminiService.generateReply(post));
         reply.setPost(post);
-
-        if (principal != null) {
-            String email = principal.getName();
-            Account account = accountService.findByEmail(email)
-                    .orElseThrow(() -> new IllegalArgumentException("Account not found"));
-            reply.setAuthor(account);
-            reply.setFromInstructor(account.hasRole("ROLE_ADMIN"));
-        } else {
-            reply.setAuthor(null);
-            reply.setFromInstructor(false);
-        } //We're gonna have to change this once the log in page is figured out
-
+        reply.setAuthor(account);
+        reply.setFromInstructor(false);
         reply.setLLMGenerated(true);
+
         Replies saved = repliesRepository.save(reply);
         return ResponseEntity.ok(saved);
     }
