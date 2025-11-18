@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState } from 'react';
 import './PostView.css';
 
 const PostView = ({
@@ -8,14 +7,14 @@ const PostView = ({
   onBack,
   onLLMReply,
   onFollowupSubmit,
-
-  }) => {
+}) => {
   const [upvoted, setUpvoted] = useState(false);
   const [starred, setStarred] = useState(false);
   const [followupText, setFollowupText] = useState('');
+  const [isAILoading, setIsAILoading] = useState(false);
 
   const isMyPost = post.author === currentUser;
-  const followups = post.followups || []; 
+  const followups = post.followups || [];
 
   const handleUpvote = () => {
     setUpvoted(!upvoted);
@@ -36,14 +35,16 @@ const PostView = ({
   };
 
   const handleAIAssist = async () => {
+    setIsAILoading(true);
     try {
       await onLLMReply(post.id, followupText);
       setFollowupText('');
     } catch (err) {
       console.error(err);
+    } finally {
+      setIsAILoading(false);
     }
   };
-
 
   const handleFollowupSubmit = async () => {
     try {
@@ -123,19 +124,31 @@ const PostView = ({
         <button 
           className="action-btn bookmark-btn"
         >
-          <span className="bookmark-icon">🔖</span>
+          <span className="bookmark-icon">📖</span>
         </button>
         <button className="action-btn link-btn" onClick={handleCopyLink}>
           <span className="link-icon">🔗</span>
         </button>
-        <button className="action-btn ai-btn" onClick={handleAIAssist}>
-          <span className="ai-icon">🤖</span> AI
+        <button 
+          className={`action-btn ai-btn ${isAILoading ? 'loading' : ''}`}
+          onClick={handleAIAssist}
+          disabled={isAILoading}
+        >
+          {isAILoading ? (
+            <>
+              <span className="ai-loading-spinner"></span>
+              <span>Generating...</span>
+            </>
+          ) : (
+            <>
+              <span className="ai-icon">🤖</span> AI
+            </>
+          )}
         </button>
         <div className="post-views">
           <span className="views-count">{post.views} views</span>
         </div>
       </div>
-
 
       {/* Followup Discussions Section */}
       <div className="followup-section">
@@ -147,21 +160,21 @@ const PostView = ({
         </div>
         
         {/* Existing Followups */}
-      {followups.length > 0 ? (
-      <div className="followups-list">
-        {followups.map((followup, index) => (
-          <div key={index} className="followup-item">
-            <div className="followup-meta">
-              <span className="followup-author">{followup.author}</span>
-              <span className="followup-time">{followup.time}</span>
-            </div>
-            <div className="followup-content">{followup.content}</div>
+        {followups.length > 0 ? (
+          <div className="followups-list">
+            {followups.map((followup, index) => (
+              <div key={index} className="followup-item">
+                <div className="followup-meta">
+                  <span className="followup-author">{followup.author}</span>
+                  <span className="followup-time">{followup.time}</span>
+                </div>
+                <div className="followup-content">{followup.content}</div>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
-    ) : (
-      <div className="no-followups">No followup discussions yet</div>
-    )}
+        ) : (
+          <div className="no-followups">No followup discussions yet</div>
+        )}
 
         {/* New Followup Input */}
         <div className="new-followup">
