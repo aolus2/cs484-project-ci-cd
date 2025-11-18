@@ -131,7 +131,9 @@ public class PostController {
         reply.setFromInstructor(account.hasRole("ROLE_ADMIN"));
         reply.setPost(post);
 
-        reply.setLLMGenerated(false);
+        reply.setLlmGenerated(false);
+        reply.setParentReplyId(req.getParentReplyId());
+
         Replies saved = repliesRepository.save(reply);
         return ResponseEntity.ok(saved);
     }
@@ -158,7 +160,8 @@ public class PostController {
         reply.setPost(post);
         reply.setAuthor(account);
         reply.setFromInstructor(false);
-        reply.setLLMGenerated(true);
+        reply.setLlmGenerated(true);
+        reply.setParentReplyId(null);
 
         Replies saved = repliesRepository.save(reply);
         return ResponseEntity.ok(saved);
@@ -167,6 +170,7 @@ public class PostController {
     @Data
     public static class CreateFollowupRequest {
         private String body;
+        private Long parentReplyId;
     }
 
 }

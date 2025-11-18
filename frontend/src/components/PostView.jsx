@@ -11,7 +11,11 @@ const PostView = ({
   const [upvoted, setUpvoted] = useState(false);
   const [starred, setStarred] = useState(false);
   const [followupText, setFollowupText] = useState('');
+  const [followupAuthor, setFollowupAuthor] = useState(post.followupAuthor || '');
   const [isAILoading, setIsAILoading] = useState(false);
+
+  const [replyingToId, setReplyingToId] = useState(null);
+  const [replyingToAuthor, setReplyingToAuthor] = useState(null);
 
   const isMyPost = post.author === currentUser;
   const followups = post.followups || [];
@@ -38,6 +42,7 @@ const PostView = ({
     setIsAILoading(true);
     try {
       await onLLMReply(post.id, followupText);
+      setFollowupAuthor('🤖');
       setFollowupText('');
     } catch (err) {
       console.error(err);
@@ -47,13 +52,72 @@ const PostView = ({
   };
 
   const handleFollowupSubmit = async () => {
+    if (!followupText.trim()) return;
     try {
-      await onFollowupSubmit(post.id, followupText);
+      await onFollowupSubmit(post.id, followupText, replyingToId);
+      setFollowupAuthor(currentUser);
       setFollowupText('');
+      setReplyingToId(null);
+      setReplyingToAuthor(null);
     } catch (err) {
       console.error(err);
     }
   };
+
+  const buildReplyingTo = (replies) => {
+    const map = new Map();
+    replies.forEach(r => map.set(r.id, { ...r, children: [] }));
+
+    const roots = [];
+    map.forEach((reply) => {
+      if (reply.parentReplyId) {
+        const parent = map.get(reply.parentReplyId);
+        if (parent) {
+          parent.children.push(reply);
+        }
+        else {
+          roots.push(reply);
+        }
+      } else {
+        roots.push(reply);
+      }
+    });
+    return roots;
+  }; 
+
+  const replyTree = buildReplyingTo(followups);
+
+  const renderReplies = (nodes, depth = 0) =>
+    nodes.map((followup) => (
+      <div
+      key={followup.id}
+      className={`followup-item ${followup.isLLMReply ? 'ai-reply' : ''}`}
+      style={{ marginLeft: depth * 24 }}
+      >
+      <div className="followup-meta">
+        <span className="followup-author">
+          {followup.isLLMReply ? 'AI Tutor' : followup.author}
+          </span>
+        <span className="followup-time">{followup.time}</span>
+      </div>
+      <div className="followup-content">{followup.content}</div>
+
+       <button
+        className="reply-btn"
+        onClick={() => {
+          setReplyingToId(followup.id);
+          setReplyingToAuthor(
+            followup.isLLMReply ? 'AI Tutor' : followup.author
+          );
+        }}
+      >
+        Reply
+      </button>
+      
+      {followup.children && followup.children.length > 0 &&
+        renderReplies(followup.children, depth + 1)}
+      </div>
+    ))
 
   return (
     <div className="post-view">
@@ -162,15 +226,7 @@ const PostView = ({
         {/* Existing Followups */}
         {followups.length > 0 ? (
           <div className="followups-list">
-            {followups.map((followup, index) => (
-              <div key={index} className="followup-item">
-                <div className="followup-meta">
-                  <span className="followup-author">{followup.author}</span>
-                  <span className="followup-time">{followup.time}</span>
-                </div>
-                <div className="followup-content">{followup.content}</div>
-              </div>
-            ))}
+            {renderReplies(replyTree)}
           </div>
         ) : (
           <div className="no-followups">No followup discussions yet</div>
@@ -178,6 +234,20 @@ const PostView = ({
 
         {/* New Followup Input */}
         <div className="new-followup">
+          {replyingToId && (
+          <div className="replying-to-banner">
+            Replying to <strong>{replyingToAuthor}</strong>
+            <button
+              className="cancel-reply-btn"
+              onClick={() => {
+                setReplyingToId(null);
+                setReplyingToAuthor(null);
+              }}
+            >
+              ×
+            </button>
+          </div>
+        )}
           <textarea
             className="followup-input"
             placeholder="Compose a new followup discussion"

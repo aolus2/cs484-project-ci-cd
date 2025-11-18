@@ -21,13 +21,25 @@ const normalizePosts = (apiPosts) =>
 
     const created = p.createdAt ? new Date(p.createdAt) : null;
 
-    const followups = (p.replies || []).map((r) => ({
-      author: r.author
-        ? `${r.author.firstName || ''} ${r.author.lastName || ''}`.trim()
-        : 'Unknown',
-      time: r.createdAt ? new Date(r.createdAt).toLocaleString() : '',
-      content: r.body,
-    }));
+    const followups = (p.replies || []).map((r) => {
+      const isLLMReply = Boolean(r.llmGenerated);
+
+
+      const authorName = isLLMReply
+        ? 'AI Tutor'
+        : (r.author
+            ? `${r.author.firstName || ''} ${r.author.lastName || ''}`.trim()
+            : 'Unknown');
+
+      return {
+        id: r.id,
+        author: authorName,
+        parentReplyId: r.parentReplyId ?? null,
+        isLLMReply,
+        time: r.createdAt ? new Date(r.createdAt).toLocaleString() : '',
+        content: r.body,
+      };
+    });
 
     return {
       id: p.id,
@@ -47,10 +59,12 @@ const normalizePosts = (apiPosts) =>
       isUnread: false,
       upvotes: p.upVotes ?? 0,
       views: 0,
+      LLMGeneratedAnswer: p.LLMGeneratedAnswerText,
       studentAnswer: p.studentAnswerText,
-      followups,              
+      followups,
     };
   });
+
 
 
 
@@ -121,9 +135,9 @@ const normalizePosts = (apiPosts) =>
     }
   };
 
-  const handleFollowupSubmit = async (postId, text) => {
+  const handleFollowupSubmit = async (postId, text, parentReplyId = null) => {
     try {
-      await axios.post(`${API_BASE}/api/posts/${postId}/replies`, { body: text }, { withCredentials: true });
+      await axios.post(`${API_BASE}/api/posts/${postId}/replies`, { body: text, parentReplyId }, { withCredentials: true });
 
       const res = await axios.get(`${API_BASE}/api/posts`);
       const normalized = normalizePosts(res.data);
@@ -301,7 +315,7 @@ const normalizePosts = (apiPosts) =>
               onAccountSettings={handleAccountSettings}
               onJoinClass={handleJoinAnotherClass}
               onLogout={handleLogout}
-              userName="Tommy Kang"
+              userName={userName}
             />
           </div>
         </div>
@@ -459,7 +473,7 @@ const normalizePosts = (apiPosts) =>
           ) : selectedPost ? (
             <PostView
               post={selectedPost}
-              currentUser="Tommy Kang"
+              currentUser={userName}
               onBack={() => setSelectedPost(null)}
               onLLMReply={handleLLMReply}
               onFollowupSubmit={handleFollowupSubmit}
