@@ -34,10 +34,10 @@ public class WebSecurityConfig {
 
 
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("api/auth/register").permitAll()
+                        .requestMatchers("/api/auth/register").permitAll()
                         .requestMatchers(HttpMethod.GET, "/login").permitAll()
-                        .requestMatchers(HttpMethod.POST, "api/posts").permitAll()
-                        .requestMatchers(HttpMethod.GET, "api/posts/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/posts").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/posts/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/posts/**").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/api/posts/*/student-answer").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/posts/*/replies").permitAll()

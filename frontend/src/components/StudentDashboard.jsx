@@ -8,7 +8,7 @@ import JoinClassModel from './JoinClassModel';
 import UserDropdown from './UserDropDown';
 import AccountSettings from './AccountSettings';
 
-const StudentDashboard = () => {
+const StudentDashboard = ({ onLogout, userName }) => {
 
 
 const normalizePosts = (apiPosts) =>
@@ -206,9 +206,12 @@ const normalizePosts = (apiPosts) =>
   };
 
   const handleLogout = () => {
-    console.log('Logging out');
-    // In a real app, this would clear session and redirect to login
-    window.location.reload();
+    if (onLogout) {
+      onLogout();
+    } else {
+      console.log('Logging out');
+      window.location.reload();
+    }
   };
 
   // Filter posts based on selected filter
