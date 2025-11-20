@@ -102,7 +102,6 @@ public class AuthController {
     }
 
     @GetMapping("/me")
-<<<<<<< HEAD
     public ResponseEntity<Account> getCurrentUser(Principal principal) {
         if (principal == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -112,20 +111,6 @@ public class AuthController {
         return accountService.findByEmail(email)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
-=======
-    public ResponseEntity<Account> me(Principal principal) {
-        if (principal == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
-        }
-
-        Account account = accountService.findByEmail(principal.getName())
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.UNAUTHORIZED,
-                        "Account not found for authenticated user"
-                ));
-
-        return ResponseEntity.ok(account);
->>>>>>> 6f9b4b0c368f82cc36892c01d6d11337816af69d
     }
 
     @Data

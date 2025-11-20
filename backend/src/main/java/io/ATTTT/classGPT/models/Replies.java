@@ -27,6 +27,7 @@ public class Replies {
     private LocalDateTime modifiedAt;
 
     @ManyToOne
+//    @JoinColumn(name = "account_id", nullable = false) //Need to put this back once login is figured out
     private Account author;
 
     @ManyToOne
@@ -35,18 +36,16 @@ public class Replies {
     private Post post;
 
     private boolean fromInstructor;
+    
+    // Fixed: Changed from LLMGenerated to llmGenerated for proper Java naming
+    @Column(name = "llm_generated")
     private boolean llmGenerated;
+    
     private boolean endorsed;
-
-    @Column(name = "parent_reply_id")
-    private Long parentReplyId;
-
 
     @PrePersist
     protected void onCreate(){
         createdAt = LocalDateTime.now();
     }
-
-
 
 }

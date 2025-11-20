@@ -52,20 +52,24 @@ public class PostController {
     }
 
     @PostMapping
-    @PreAuthorize("isAuthenticated()")
+//    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Post> createPost(@RequestBody Post incoming,
                                            Principal principal) {
+//        String email = principal.getName();
+//        Account account = accountService.findByEmail(email)
+//                .orElseThrow(() -> new IllegalArgumentException("Account not found"));
 
-        if (principal == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
+        Account account;
+
+        if (principal != null) { //Temp anonymous implementation (will be removed once log in is handled
+            String email = principal.getName();
+            account = accountService.findByEmail(email)
+                    .orElseThrow(() -> new IllegalArgumentException("Account not found"));
+        } else {
+            // fallback demo user
+            account = accountService.findByEmail("user.user@domain.com")
+                    .orElseThrow(() -> new IllegalArgumentException("Account not found"));
         }
-
-        String email = principal.getName();
-        Account account = accountService.findByEmail(email)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.UNAUTHORIZED,
-                        "Account not found for authenticated user"
-                ));
 
         Post post = new Post();
         post.setTitle(incoming.getTitle());
@@ -78,15 +82,9 @@ public class PostController {
 
 
     @PutMapping("/{id}")
-    @PreAuthorize("isAuthenticated()")
+//    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Post> updatePost(@PathVariable Long id,
-                                           @RequestBody Post incoming,
-                                           Principal principal) {
-
-        if (principal == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
-        }
-
+                                           @RequestBody Post incoming) {
 
         return postService.getById(id)
                 .map(existing -> {
@@ -100,7 +98,7 @@ public class PostController {
 
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+//    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Object> deletePost(@PathVariable Long id) {
         return postService.getById(id)
                 .map(post -> {
@@ -112,28 +110,17 @@ public class PostController {
 
 
     @PostMapping("/{id}/replies")
-    @PreAuthorize("isAuthenticated()")
+//    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Object> addReply(@PathVariable Long id,
                                            @RequestBody CreateFollowupRequest req,
                                            Principal principal) {
-        if (principal == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
-        }
-
         Post post = postService.getById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-
-        String email = principal.getName();
-        Account account = accountService.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("Account not found"));
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
         Replies reply = new Replies();
         reply.setBody(req.getBody());
-        reply.setAuthor(account);
-        reply.setFromInstructor(account.hasRole("ROLE_ADMIN"));
         reply.setPost(post);
 
-<<<<<<< HEAD
         if (principal != null) {
             String email = principal.getName();
             Account account = accountService.findByEmail(email)
@@ -148,48 +135,29 @@ public class PostController {
             reply.setAuthor(account);
             reply.setFromInstructor(false);
         }
-=======
-        reply.setLlmGenerated(false);
-        reply.setParentReplyId(req.getParentReplyId());
->>>>>>> 6f9b4b0c368f82cc36892c01d6d11337816af69d
 
+        reply.setLlmGenerated(false);
         Replies saved = repliesRepository.save(reply);
         return ResponseEntity.ok(saved);
     }
 
     @PostMapping("/{id}/LLMReply")
-    @PreAuthorize("isAuthenticated()")
+//    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Object> addLLMReply(@PathVariable Long id,
                                            Principal principal) {
-
-        if (principal == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
-        }
-
         Post post = postService.getById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-
-        String email = principal.getName();
-        Account account = accountService.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("Account not found"));
 
 
         Replies reply = new Replies();
         reply.setBody(geminiService.generateReply(post));
         reply.setPost(post);
-        reply.setAuthor(account);
-        reply.setFromInstructor(false);
-        reply.setLlmGenerated(true);
-        reply.setParentReplyId(null);
 
-<<<<<<< HEAD
         // Set author to null or a system account for AI replies
         reply.setAuthor(null);
         reply.setFromInstructor(false);
-        reply.setLLMGenerated(true);
+        reply.setLlmGenerated(true);
         
-=======
->>>>>>> 6f9b4b0c368f82cc36892c01d6d11337816af69d
         Replies saved = repliesRepository.save(reply);
         return ResponseEntity.ok(saved);
     }
@@ -236,7 +204,7 @@ public class PostController {
                 
                 for (Replies reply : replies) {
                     // Track AI generations
-                    if (reply.isLLMGenerated()) {
+                    if (reply.isLlmGenerated()) {
                         stats.totalAIReplies++;
                         
                         AIGenerationInfo info = new AIGenerationInfo();
@@ -267,7 +235,6 @@ public class PostController {
     @Data
     public static class CreateFollowupRequest {
         private String body;
-        private Long parentReplyId;
     }
 
     @Data
