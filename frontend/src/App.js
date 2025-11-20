@@ -15,69 +15,95 @@ function App() {
     checkAuthStatus();
   }, []);
 
-  const checkAuthStatus = async () => {
-    try {
-      // Try to fetch current user to check if we're authenticated
-      const response = await fetch('http://localhost:8080/api/auth/me', {
-        credentials: 'include'
-      });
-      
-      if (response.ok) {
-        const accountData = await response.json();
-        const hasAdminRole = accountData.authorities?.some(auth => auth.name === 'ROLE_ADMIN') || false;
-        setIsInstructor(hasAdminRole);
-        setUser(accountData);
-        setIsAuthenticated(true);
-      }
-    } catch (error) {
-      console.log('Not authenticated');
-    } finally {
+  
+const checkAuthStatus = async () => {
+  try {
+    const response = await fetch(`https://cs484-project-ci-cd.onrender.com/api/auth/me`, {
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
       setIsLoading(false);
+      return;
     }
-  };
+
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      setIsLoading(false);
+      return;
+    }
+
+    const accountData = await response.json();
+    const hasAdminRole =
+      accountData.authorities?.some((auth) => auth.name === 'ROLE_ADMIN') || false;
+
+    setIsInstructor(hasAdminRole);
+    setUser(accountData);
+    setIsAuthenticated(true);
+  } catch (err) {
+    console.log('Not authenticated');
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const handleLogin = async (userData) => {
     try {
-      const formData = new URLSearchParams();
-      formData.append('email', userData.email);
-      formData.append('password', userData.password);
-
-      const response = await fetch('http://localhost:8080/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: formData.toString(),
-        credentials: 'include'
-      });
-
-      console.log('Login response status:', response.status); // Debug log
-
-      // Spring Security form login returns 200 on success, 401 on failure
-      if (response.status === 200) {
-        // Login successful, now fetch user details
-        const accountResponse = await fetch('http://localhost:8080/api/auth/me', {
-          credentials: 'include'
-        });
-        
-        if (accountResponse.ok) {
-          const accountData = await accountResponse.json();
-          console.log('Account data:', accountData); // Debug log
-          const hasAdminRole = accountData.authorities?.some(auth => auth.name === 'ROLE_ADMIN') || false;
-          console.log('Has admin role:', hasAdminRole); // Debug log
-          setIsInstructor(hasAdminRole);
-          setUser({...userData, ...accountData, isInstructor: hasAdminRole});
-          setIsAuthenticated(true);
-          return true; // Success!
-        } else {
-          throw new Error('Failed to fetch user information');
+      const response = await fetch(
+        'https://cs484-project-ci-cd.onrender.com/api/auth/login',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: userData.email,
+            password: userData.password,
+          }),
+          credentials: 'include',
         }
-      } else if (response.status === 401) {
+      );
+
+      console.log('Login response status:', response.status);
+
+      if (response.status === 401) {
         throw new Error('Invalid email or password');
-      } else {
-        const errorText = await response.text().catch(() => '');
-        throw new Error(errorText || 'Login failed with status ' + response.status);
       }
+
+      const contentType = response.headers.get('content-type') || '';
+
+      if (!response.ok) {
+        const text = await response.text().catch(() => '');
+        console.error(
+          'Non-OK /api/auth/login response body (first 200 chars):',
+          text.slice(0, 200)
+        );
+        throw new Error(text || `Login failed with status ${response.status}`);
+      }
+
+      if (!contentType.includes('application/json')) {
+        const text = await response.text().catch(() => '');
+        console.error(
+          'Unexpected non-JSON /api/auth/login response:',
+          text.slice(0, 200)
+        );
+        throw new Error('Server returned an unexpected response while logging in');
+      }
+
+      // This is the Account entity the backend returns
+      const accountData = await response.json();
+      console.log('Account data from /api/auth/login:', accountData);
+
+      const hasAdminRole =
+        accountData.authorities?.some(
+          (auth) => auth.name === 'ROLE_ADMIN'
+        ) || false;
+
+      setIsInstructor(hasAdminRole);
+      setUser({ ...accountData, isInstructor: hasAdminRole });
+      setIsAuthenticated(true);
+
+      return true;
     } catch (error) {
       console.error('Login error:', error);
       alert('Login failed: ' + error.message);
@@ -85,9 +111,10 @@ function App() {
     }
   };
 
+
   const handleRegister = async (userData) => {
     try {
-      const response = await fetch('http://localhost:8080/api/auth/register', {
+      const response = await fetch('https://cs484-project-ci-cd.onrender.com/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -128,7 +155,7 @@ function App() {
 
   const handleLogout = async () => {
     try {
-      await fetch('http://localhost:8080/logout', {
+      await fetch('https://cs484-project-ci-cd.onrender.com/logout', {
         method: 'POST',
         credentials: 'include'
       });
