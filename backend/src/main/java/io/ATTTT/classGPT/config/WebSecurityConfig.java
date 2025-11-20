@@ -33,6 +33,7 @@ public class WebSecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/register").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                         .requestMatchers("/api/auth/me").authenticated()
                         .requestMatchers(HttpMethod.GET, "/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/login").permitAll() // Added POST /login
@@ -46,26 +47,26 @@ public class WebSecurityConfig {
                         .anyRequest().authenticated()
                 )
                 // login config - returns JSON for API clients
-                .formLogin(form -> form
-                        .loginProcessingUrl("/login")
-                        .usernameParameter("email")
-                        .passwordParameter("password")
-                        .successHandler((request, response, authentication) -> {
-                            response.setStatus(HttpServletResponse.SC_OK);
-                            response.setContentType("application/json");
-                            response.setCharacterEncoding("UTF-8");
-                            response.getWriter().write("{\"success\":true,\"message\":\"Login successful\"}");
-                            response.getWriter().flush();
-                        })
-                        .failureHandler((request, response, exception) -> {
-                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                            response.setContentType("application/json");
-                            response.setCharacterEncoding("UTF-8");
-                            response.getWriter().write("{\"success\":false,\"message\":\"Authentication failed\"}");
-                            response.getWriter().flush();
-                        })
-                        .permitAll()
-                )
+//                .formLogin(form -> form
+//                        .loginProcessingUrl("/login")
+//                        .usernameParameter("email")
+//                        .passwordParameter("password")
+//                        .successHandler((request, response, authentication) -> {
+//                            response.setStatus(HttpServletResponse.SC_OK);
+//                            response.setContentType("application/json");
+//                            response.setCharacterEncoding("UTF-8");
+//                            response.getWriter().write("{\"success\":true,\"message\":\"Login successful\"}");
+//                            response.getWriter().flush();
+//                        })
+//                        .failureHandler((request, response, exception) -> {
+//                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+//                            response.setContentType("application/json");
+//                            response.setCharacterEncoding("UTF-8");
+//                            response.getWriter().write("{\"success\":false,\"message\":\"Authentication failed\"}");
+//                            response.getWriter().flush();
+//                        })
+//                        .permitAll()
+//                )
                 // logout config - returns JSON for API clients
                 .logout(logout -> logout
                         .logoutUrl("/logout")
