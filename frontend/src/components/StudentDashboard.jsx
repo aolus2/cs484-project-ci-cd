@@ -285,13 +285,13 @@ const normalizePosts = (apiPosts) =>
         </div>
         <div className="header-right">
           <div className="user-info" style={{ position: 'relative' }}>
-            <span>Tommy Kang</span>
+            <span>{userName || 'User'}</span>
             <div 
               className="user-avatar" 
               onClick={() => setShowUserDropdown(!showUserDropdown)}
               style={{ cursor: 'pointer' }}
             >
-              TK
+              {(userName || 'U').charAt(0).toUpperCase()}
             </div>
             <UserDropdown 
               isOpen={showUserDropdown}
@@ -299,7 +299,7 @@ const normalizePosts = (apiPosts) =>
               onAccountSettings={handleAccountSettings}
               onJoinClass={handleJoinAnotherClass}
               onLogout={handleLogout}
-              userName="Tommy Kang"
+              userName={userName || 'User'}
             />
           </div>
         </div>
@@ -457,7 +457,7 @@ const normalizePosts = (apiPosts) =>
           ) : selectedPost ? (
             <PostView
               post={selectedPost}
-              currentUser="Tommy Kang"
+              currentUser={userName || 'User'}
               onBack={() => setSelectedPost(null)}
               onLLMReply={handleLLMReply}
               onFollowupSubmit={handleFollowupSubmit}

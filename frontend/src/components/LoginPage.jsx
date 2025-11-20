@@ -30,7 +30,7 @@ const LoginPage = ({ onLogin, onRegister }) => {
         email, 
         password, 
         fullName, 
-        role,
+        role: role === 'professor' ? 'instructor' : role, // Map professor to instructor for backend
         classCodes: role === 'student' ? classCodes.filter(code => code.trim() !== '') : []
       });
     } catch (error) {

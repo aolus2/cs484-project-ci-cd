@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import StudentDashboard from './components/StudentDashboard';
+import InstructorDashboard from './components/InstructorDashboard';
 import LoginPage from './components/LoginPage';
 import './App.css';
 
@@ -7,6 +8,7 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isInstructor, setIsInstructor] = useState(false);
 
   // Check if user is already logged in on mount
   useEffect(() => {
@@ -15,15 +17,17 @@ function App() {
 
   const checkAuthStatus = async () => {
     try {
-      // Try to fetch posts to check if we're authenticated
-      const response = await fetch('http://localhost:8080/api/posts', {
+      // Try to fetch current user to check if we're authenticated
+      const response = await fetch('http://localhost:8080/api/auth/me', {
         credentials: 'include'
       });
       
       if (response.ok) {
-        // User is authenticated
+        const accountData = await response.json();
+        const hasAdminRole = accountData.authorities?.some(auth => auth.name === 'ROLE_ADMIN') || false;
+        setIsInstructor(hasAdminRole);
+        setUser(accountData);
         setIsAuthenticated(true);
-        // You might want to fetch user details here
       }
     } catch (error) {
       console.log('Not authenticated');
@@ -47,15 +51,36 @@ function App() {
         credentials: 'include'
       });
 
-      if (response.ok) {
-        setUser(userData);
-        setIsAuthenticated(true);
+      console.log('Login response status:', response.status); // Debug log
+
+      // Spring Security form login returns 200 on success, 401 on failure
+      if (response.status === 200) {
+        // Login successful, now fetch user details
+        const accountResponse = await fetch('http://localhost:8080/api/auth/me', {
+          credentials: 'include'
+        });
+        
+        if (accountResponse.ok) {
+          const accountData = await accountResponse.json();
+          console.log('Account data:', accountData); // Debug log
+          const hasAdminRole = accountData.authorities?.some(auth => auth.name === 'ROLE_ADMIN') || false;
+          console.log('Has admin role:', hasAdminRole); // Debug log
+          setIsInstructor(hasAdminRole);
+          setUser({...userData, ...accountData, isInstructor: hasAdminRole});
+          setIsAuthenticated(true);
+          return true; // Success!
+        } else {
+          throw new Error('Failed to fetch user information');
+        }
+      } else if (response.status === 401) {
+        throw new Error('Invalid email or password');
       } else {
-        throw new Error('Login failed');
+        const errorText = await response.text().catch(() => '');
+        throw new Error(errorText || 'Login failed with status ' + response.status);
       }
     } catch (error) {
       console.error('Login error:', error);
-      alert('Login failed. Please check your credentials.');
+      alert('Login failed: ' + error.message);
       throw error;
     }
   };
@@ -78,11 +103,17 @@ function App() {
       });
 
       if (response.ok) {
+        const registeredAccount = await response.json();
+        console.log('Registered account:', registeredAccount); // Debug log
+        
         // After successful registration, log them in
+        // Need to wait a brief moment for the registration to complete
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         await handleLogin({
           email: userData.email,
           password: userData.password,
-          name: userData.fullName
+          role: userData.role
         });
       } else {
         const error = await response.text();
@@ -106,6 +137,7 @@ function App() {
     } finally {
       setUser(null);
       setIsAuthenticated(false);
+      setIsInstructor(false);
     }
   };
 
@@ -120,7 +152,25 @@ function App() {
   return (
     <div className="App">
       {isAuthenticated ? (
-        <StudentDashboard onLogout={handleLogout} userName={user?.name || user?.fullName || 'User'} />
+        isInstructor ? (
+          <InstructorDashboard 
+            onLogout={handleLogout} 
+            userName={
+              user?.firstName 
+                ? `${user.firstName} ${user.lastName || ''}`.trim()
+                : user?.name || user?.fullName || 'Instructor'
+            } 
+          />
+        ) : (
+          <StudentDashboard 
+            onLogout={handleLogout} 
+            userName={
+              user?.firstName 
+                ? `${user.firstName} ${user.lastName || ''}`.trim()
+                : user?.name || user?.fullName || 'User'
+            } 
+          />
+        )
       ) : (
         <LoginPage onLogin={handleLogin} onRegister={handleRegister} />
       )}

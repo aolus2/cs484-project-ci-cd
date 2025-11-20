@@ -6,10 +6,12 @@ import io.ATTTT.classGPT.services.AccountService;
 import io.ATTTT.classGPT.repositories.AuthorityRepository;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -55,6 +57,18 @@ public class AuthController {
 
 
         return ResponseEntity.ok(saved);
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<Account> getCurrentUser(Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        
+        String email = principal.getName();
+        return accountService.findByEmail(email)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @Data
