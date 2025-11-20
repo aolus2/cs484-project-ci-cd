@@ -3,6 +3,7 @@ import StudentDashboard from './components/StudentDashboard';
 import InstructorDashboard from './components/InstructorDashboard';
 import LoginPage from './components/LoginPage';
 import './App.css';
+import { Routes, Route, Navigate } from 'react-router-dom';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -12,9 +13,10 @@ function App() {
 
   // Check if user is already logged in on mount
   useEffect(() => {
-    checkAuthStatus();
+    setIsLoading(false);
   }, []);
 
+<<<<<<< HEAD
   const checkAuthStatus = async () => {
     try {
       // Try to fetch current user to check if we're authenticated
@@ -28,13 +30,32 @@ function App() {
         setIsInstructor(hasAdminRole);
         setUser(accountData);
         setIsAuthenticated(true);
+=======
+  useEffect(() => {
+    const checkAuthStatus = async () => {
+      try {
+        const res = await fetch(`http://localhost:8080/api/auth/me`, {
+          credentials: 'include',
+        });
+
+        if (res.ok) {
+          const account = await res.json();
+          setUser(account);
+          setIsAuthenticated(true);
+        } else {
+          setIsAuthenticated(false);
+        }
+      } catch (err) {
+        console.error('Not authenticated', err);
+        setIsAuthenticated(false);
+      } finally {
+        setIsLoading(false);
+>>>>>>> 6f9b4b0c368f82cc36892c01d6d11337816af69d
       }
-    } catch (error) {
-      console.log('Not authenticated');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    };
+
+    checkAuthStatus();
+  }, []);
 
   const handleLogin = async (userData) => {
     try {
@@ -42,12 +63,15 @@ function App() {
       formData.append('email', userData.email);
       formData.append('password', userData.password);
 
-      const response = await fetch('http://localhost:8080/login', {
+      const response = await fetch('http://localhost:8080/api/auth/login', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
+          'Content-Type': 'application/json',
         },
-        body: formData.toString(),
+        body: JSON.stringify({
+          email: userData.email,
+          password: userData.password,
+        }),
         credentials: 'include'
       });
 
@@ -88,19 +112,18 @@ function App() {
   const handleRegister = async (userData) => {
     try {
       const response = await fetch('http://localhost:8080/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          fullName: userData.fullName,
-          email: userData.email,
-          password: userData.password,
-          role: userData.role,
-          classCodes: userData.classCodes || []
-        }),
-        credentials: 'include'
-      });
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              fullName: userData.fullName,
+              email: userData.email,
+              password: userData.password,
+              role: userData.role,
+              classCodes: userData.classCodes || []
+            }),
+        });
 
       if (response.ok) {
         const registeredAccount = await response.json();
@@ -150,6 +173,7 @@ function App() {
   }
 
   return (
+<<<<<<< HEAD
     <div className="App">
       {isAuthenticated ? (
         isInstructor ? (
@@ -175,6 +199,27 @@ function App() {
         <LoginPage onLogin={handleLogin} onRegister={handleRegister} />
       )}
     </div>
+=======
+    <Routes>
+      <Route
+        path="/login"
+        element={
+          isAuthenticated
+            ? <Navigate to="/" replace />
+            : <LoginPage onLogin={handleLogin} onRegister={handleRegister} />
+        }
+      />
+
+      <Route
+        path="/"
+        element={
+          isAuthenticated
+            ? <StudentDashboard onLogout={handleLogout} userName={user?.firstName || 'User'} />
+            : <Navigate to="/login" replace />
+        }
+      />
+    </Routes>
+>>>>>>> 6f9b4b0c368f82cc36892c01d6d11337816af69d
   );
 }
 

@@ -164,8 +164,8 @@ const LoginPage = ({ onLogin, onRegister }) => {
                 <label className="radio-label">
                   <input
                     type="radio"
-                    value="professor"
-                    checked={role === 'professor'}
+                    value="instructor"
+                    checked={role === 'instructor'}
                     onChange={(e) => setRole(e.target.value)}
                   />
                   <span>Professor</span>

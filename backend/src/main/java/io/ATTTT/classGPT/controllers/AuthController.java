@@ -4,17 +4,27 @@ import io.ATTTT.classGPT.models.Account;
 import io.ATTTT.classGPT.models.Authority;
 import io.ATTTT.classGPT.services.AccountService;
 import io.ATTTT.classGPT.repositories.AuthorityRepository;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.security.Principal;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import static org.springframework.security.web.context.HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -24,6 +34,38 @@ public class AuthController {
     private final AccountService accountService;
     private final PasswordEncoder passwordEncoder;
     private final AuthorityRepository authorityRepository;
+
+    @PostMapping("/login")
+    public ResponseEntity<Account> login(@RequestBody RegisterRequest req, HttpServletRequest request) {
+        String email = req.getEmail();
+
+        Account account = accountService.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials"));
+
+        if (!passwordEncoder.matches(req.getPassword(), account.getPassword())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
+        }
+
+        List<SimpleGrantedAuthority> grantedAuthorities = account.getAuthorities().stream()
+                .map(auth -> new SimpleGrantedAuthority(auth.getName()))
+                .toList();
+
+        UsernamePasswordAuthenticationToken authToken =
+                new UsernamePasswordAuthenticationToken(
+                        account.getEmail(),
+                        null,
+                        grantedAuthorities
+                );
+
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(authToken);
+        SecurityContextHolder.setContext(context);
+
+        HttpSession session = request.getSession(true);
+        session.setAttribute(SPRING_SECURITY_CONTEXT_KEY, context);
+
+        return ResponseEntity.ok(account);
+    }
 
     @PostMapping("/register")
     public ResponseEntity<Account> register(@RequestBody RegisterRequest req) {
@@ -60,6 +102,7 @@ public class AuthController {
     }
 
     @GetMapping("/me")
+<<<<<<< HEAD
     public ResponseEntity<Account> getCurrentUser(Principal principal) {
         if (principal == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -69,6 +112,20 @@ public class AuthController {
         return accountService.findByEmail(email)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+=======
+    public ResponseEntity<Account> me(Principal principal) {
+        if (principal == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Not authenticated");
+        }
+
+        Account account = accountService.findByEmail(principal.getName())
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.UNAUTHORIZED,
+                        "Account not found for authenticated user"
+                ));
+
+        return ResponseEntity.ok(account);
+>>>>>>> 6f9b4b0c368f82cc36892c01d6d11337816af69d
     }
 
     @Data
