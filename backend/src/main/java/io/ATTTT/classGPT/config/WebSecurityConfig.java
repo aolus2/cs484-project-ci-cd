@@ -31,21 +31,27 @@ public class WebSecurityConfig {
                 .cors(withDefaults())
                 .csrf(csrf -> csrf.disable())
 
+//                .authorizeHttpRequests(auth -> auth
+//                        .requestMatchers("/api/auth/register").permitAll()
+//                        .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+//                        .requestMatchers("/api/auth/me").authenticated()
+//                        .requestMatchers(HttpMethod.GET, "/login").permitAll()
+//                        .requestMatchers(HttpMethod.POST, "/login").permitAll() // Added POST /login
+//                        .requestMatchers(HttpMethod.POST, "/api/posts").permitAll()
+//                        .requestMatchers(HttpMethod.GET, "/api/posts/**").permitAll()
+//                        .requestMatchers(HttpMethod.GET, "/api/posts/statistics").permitAll() // Statistics endpoint
+//                        .requestMatchers(HttpMethod.PUT, "/api/posts/*/student-answer").permitAll()
+//                        .requestMatchers(HttpMethod.POST, "/api/posts/*/replies").permitAll()
+//                        .requestMatchers(HttpMethod.POST, "/api/posts/*/LLMReply").permitAll()
+//                        .requestMatchers(HttpMethod.PUT, "/api/posts/*/replies/*/endorse").permitAll()
+//                        .anyRequest().authenticated()
+//                )
+
+
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/register").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
-                        .requestMatchers("/api/auth/me").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/login").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/login").permitAll() // Added POST /login
-                        .requestMatchers(HttpMethod.POST, "/api/posts").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/posts/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/posts/statistics").permitAll() // Statistics endpoint
-                        .requestMatchers(HttpMethod.PUT, "/api/posts/*/student-answer").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/posts/*/replies").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/posts/*/LLMReply").permitAll()
-                        .requestMatchers(HttpMethod.PUT, "/api/posts/*/replies/*/endorse").permitAll()
-                        .anyRequest().authenticated()
+                        .anyRequest().permitAll()
                 )
+
                 // login config - returns JSON for API clients
 //                .formLogin(form -> form
 //                        .loginProcessingUrl("/login")
