@@ -12,7 +12,7 @@
 ## CI/CD Deployment
 - Hosted on **Cloudflare Pages**
 - Auto-deploys on every push to `main`
-- [Live site link](https://*****.workers.dev) [fix url]
+- [Live site link](https://cs484classgptproject.pages.dev/) [fix url]
 
 - ## Description
 This repository contains our team’s project with CI/CD pipelines configured using Cloudflare Pages.
